@@ -52,10 +52,26 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     }
                     logger.info("User With Role " + role + " Is Accessing The Api " + exchange.getRequest().getURI());
                 }
+
                 if(validator.isAdminAccess.test(exchange.getRequest())){
                     if(!role.contains("ROLE_ADMIN")){
                         logger.error("User with role "+role+"  dont have access to this api");
                         throw new RoleNotMatchException("Only Admin can add new hotel");
+                    }
+                    logger.info("User With Role " + role + " Is Accessing The Api " + exchange.getRequest().getURI());
+                }
+                if(validator.isHotelOwnerAccess.test(exchange.getRequest())){
+                    if(!role.contains("ROLE_HOTEL_OWNER")){
+                        logger.error("User with role "+role+"  dont have access to this api");
+                        throw new RoleNotMatchException("Only hotel owner can book rooms");
+                    }
+                    logger.info("User With Role " + role + " Is Accessing The Api " + exchange.getRequest().getURI());
+                }
+
+                if(validator.isUserAccess.test(exchange.getRequest())){
+                    if(!role.contains("ROLE_USER")){
+                        logger.error("User with role "+role+"  dont have access to this api");
+                        throw new RoleNotMatchException("Only user can book rooms");
                     }
                     logger.info("User With Role " + role + " Is Accessing The Api " + exchange.getRequest().getURI());
                 }

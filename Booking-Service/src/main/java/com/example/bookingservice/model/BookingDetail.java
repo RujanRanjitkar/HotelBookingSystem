@@ -17,13 +17,15 @@ public class BookingDetail {
     private Long bookingId;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
-    private int numberOfGuests;
 
     @ElementCollection
     private List<String> specialRequest;
 
-    @Enumerated(EnumType.ORDINAL)
+    private String paymentOption;
+    @Enumerated(EnumType.STRING)
     private BookingStatus bookingStatus;
 
-    private double totalPrice;
+    private Long roomId;
+    private String hotelName;
+    private String bookedBy;
 }

@@ -3,6 +3,6 @@ package com.example.userservice.enums;
 public enum Role {
     USER,
     ADMIN,
-    OWNER,
+    HOTEL_OWNER,
     SUPER_ADMIN
 }

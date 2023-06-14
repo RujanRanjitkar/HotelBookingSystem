@@ -3,6 +3,8 @@ package com.example.userservice.service;
 import com.example.userservice.customException.PasswordNotMatchException;
 import com.example.userservice.dto.UserCredentialsRequestDto;
 import com.example.userservice.enums.Role;
+import com.example.userservice.externalservice.InventoryService;
+import com.example.userservice.model.Hotel;
 import com.example.userservice.model.UserCredentials;
 import com.example.userservice.repo.UserCredentialsRepo;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +16,10 @@ import org.springframework.stereotype.Service;
 public class UserCredentialsServiceImpl implements UserCredentialsService {
     private final UserCredentialsRepo userRepo;
     private final PasswordEncoder passwordEncoder;
+    private final InventoryService inventoryService;
 
-    private UserCredentials userDetails(UserCredentialsRequestDto userRequestDto){
-        UserCredentials user=new UserCredentials();
+    private UserCredentials userDetails(UserCredentialsRequestDto userRequestDto) {
+        UserCredentials user = new UserCredentials();
 
         user.setFirstName(userRequestDto.getFirstName());
         user.setLastName(userRequestDto.getLastName());
@@ -26,23 +29,31 @@ public class UserCredentialsServiceImpl implements UserCredentialsService {
         user.setPassword(passwordEncoder.encode(userRequestDto.getPassword()));
         user.setRePassword(passwordEncoder.encode(userRequestDto.getRePassword()));
 
-        if(!userRequestDto.getPassword().equals(userRequestDto.getRePassword())){
+        if (!userRequestDto.getPassword().equals(userRequestDto.getRePassword())) {
             throw new PasswordNotMatchException("Password did not match");
         }
 
         return user;
     }
+
     @Override
     public void addNewUser(UserCredentialsRequestDto userRequestDto) {
-        UserCredentials user=userDetails(userRequestDto);
-        user.setRole(Role.USER);
+        UserCredentials user = userDetails(userRequestDto);
+
+        String ownerEmail = inventoryService.getHotelByHotelOwnerEmail(userRequestDto.getEmail());
+
+        if (ownerEmail.equals(userRequestDto.getEmail())) {
+            user.setRole(Role.HOTEL_OWNER);
+        } else {
+            user.setRole(Role.USER);
+        }
 
         userRepo.save(user);
     }
 
     @Override
     public void addNewAdmin(UserCredentialsRequestDto userRequestDto) {
-        UserCredentials user=userDetails(userRequestDto);
+        UserCredentials user = userDetails(userRequestDto);
         user.setRole(Role.ADMIN);
 
         userRepo.save(user);

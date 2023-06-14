@@ -11,7 +11,9 @@ import java.util.List;
 public class BookingDetailRequestDto {
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
-    private int numberOfGuests;
     private List<String> specialRequest;
-    private double totalPrice;
+    private String paymentOption;
+    private Long roomId;
+    private String hotelName;
+    private String bookedBy;
 }

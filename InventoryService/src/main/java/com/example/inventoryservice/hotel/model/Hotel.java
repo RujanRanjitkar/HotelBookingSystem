@@ -35,4 +35,7 @@ public class Hotel {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "hotel")
     private List<Room> rooms;
+
+    @Column(updatable = false)
+    private String hotelOwnerEmail;
 }

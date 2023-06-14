@@ -17,4 +17,5 @@ public class HotelRequestDto {
     private String description;
     private String createdBy;
     private List<Contact> contacts;
+    private String hotelOwnerEmail;
 }

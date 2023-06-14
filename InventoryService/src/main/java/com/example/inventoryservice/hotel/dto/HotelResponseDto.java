@@ -18,6 +18,7 @@ public class HotelResponseDto {
     private String hotelName;
     private AddressResponseDto address;
     private String description;
+    private String hotelOwnerEmail;
     private List<ImageResponseDto> hotelImages;
     private List<ContactResponseDto> contacts;
     private List<RoomResponseDto> rooms;

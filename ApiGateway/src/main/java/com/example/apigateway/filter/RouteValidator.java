@@ -15,6 +15,7 @@ public class RouteValidator {
             "/api/hotels/get_all_hotels",
             "/api/hotels/get_hotel_by_hotelId/**",
             "/api/hotels/get_hotels_by_location/**",
+            "/api/hotels/search/**",
             "/eureka"
     );
     public Predicate<ServerHttpRequest> isSecured =
@@ -37,6 +38,26 @@ public class RouteValidator {
 
     public Predicate<ServerHttpRequest> isAdminAccess =
             request -> adminEndpoints
+                    .stream()
+                    .anyMatch(uri -> new AntPathMatcher().match(uri, request.getURI().getPath()));
+
+    public static final List<String> hotelOwnerEndpoints = List.of(
+            "/api/rooms/add_new_room",
+            "api/rooms/update_roomInfo/**",
+            "/api/hotels/update_hotelInfo/**"
+    );
+
+    public Predicate<ServerHttpRequest> isHotelOwnerAccess =
+            request -> hotelOwnerEndpoints
+                    .stream()
+                    .anyMatch(uri -> new AntPathMatcher().match(uri, request.getURI().getPath()));
+
+    public static final List<String> userEndpoints = List.of(
+            "/api/booking_details/book_rooms"
+    );
+
+    public Predicate<ServerHttpRequest> isUserAccess =
+            request -> userEndpoints
                     .stream()
                     .anyMatch(uri -> new AntPathMatcher().match(uri, request.getURI().getPath()));
 }

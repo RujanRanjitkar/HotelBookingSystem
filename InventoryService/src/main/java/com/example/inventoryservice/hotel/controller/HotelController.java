@@ -3,7 +3,8 @@ package com.example.inventoryservice.hotel.controller;
 import com.example.inventoryservice.hotel.dto.HotelRequestDto;
 import com.example.inventoryservice.hotel.dto.HotelResponseDto;
 import com.example.inventoryservice.hotel.service.HotelService;
-import com.example.inventoryservice.hotel.util.JwtUtil;
+import com.example.inventoryservice.util.JwtUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +27,7 @@ public class HotelController {
     private String path;
 
     @PostMapping(value = "/add_new_hotel")
-    public ResponseEntity<String> addHotel(@RequestPart HotelRequestDto hotelRequestDto,
+    public ResponseEntity<String> addHotel(@Valid @RequestPart HotelRequestDto hotelRequestDto,
                                            @RequestPart List<MultipartFile> hotelImages,
                                            @RequestHeader("Authorization") String authorizationHeader) throws IOException {
 
@@ -52,12 +53,6 @@ public class HotelController {
         return new ResponseEntity<>(hotel, HttpStatus.OK);
     }
 
-    /*@GetMapping("/get_hotel_by_hotel_owner_email/{email}")
-    public ResponseEntity<HotelResponseDto> getHotelByHotelOwnerEmail(@PathVariable String email) {
-
-        HotelResponseDto hotel = hotelService.getHotelByHotelOwnerEmail(email);
-        return new ResponseEntity<>(hotel, HttpStatus.OK);
-    }*/
     @GetMapping("/get_hotel_by_hotel_owner_email/{email}")
     public ResponseEntity<String> getHotelByHotelOwnerEmail(@PathVariable String email) {
 
@@ -84,9 +79,12 @@ public class HotelController {
 
     @PutMapping(value = "/update_hotelInfo/{hotelId}")
     public ResponseEntity<String> updateHotelInfo(@PathVariable Long hotelId, @RequestPart HotelRequestDto hotelRequestDto,
-                                           @RequestPart List<MultipartFile> hotelImages) throws IOException {
+                                           @RequestPart List<MultipartFile> hotelImages, @RequestHeader("Authorization") String authorizationHeader) throws IOException {
 
-        hotelService.updateHotelInfo(hotelId, hotelRequestDto, path, hotelImages);
+        String token = authorizationHeader.substring(7); //Remove "Bearer " from token
+        String userName = jwtUtil.extractUserName(token);
+
+        hotelService.updateHotelInfo(hotelId, hotelRequestDto, path, hotelImages, userName);
         return new ResponseEntity<>("Hotel Updated Successfully", HttpStatus.CREATED);
     }
 }

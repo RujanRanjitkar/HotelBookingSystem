@@ -15,5 +15,4 @@ public class RoomResponseDto {
     private RoomStatus roomStatus;
     private List<ImageResponseDto> roomImages;
     private double price;
-    private HotelRoomRequestDto hotel;
 }

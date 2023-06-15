@@ -14,12 +14,11 @@ public interface HotelService {
     List<HotelResponseDto> getAllHotels();
     HotelResponseDto getHotelByHotelId(Long hotelId);
 
-//    HotelResponseDto getHotelByHotelOwnerEmail(String email);
     List<HotelResponseDto> getHotelsByLocation(String location);
 
     List<HotelResponseDto> getHotels(String hotelName, String location, String city, Double price, Pageable pageable);
 
     String getHotelByHotelOwnerEmail(String email);
 
-    void updateHotelInfo(Long hotelId, HotelRequestDto hotelRequestDto, String path, List<MultipartFile> hotelImages) throws IOException;
+    void updateHotelInfo(Long hotelId, HotelRequestDto hotelRequestDto, String path, List<MultipartFile> hotelImages, String authorizationHeader) throws IOException;
 }

@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Booking-Service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Booking-Service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/EmailService.main.iml" filepath="$PROJECT_DIR$/.idea/modules/EmailService.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/HotelBookingSystem.iml" filepath="$PROJECT_DIR$/HotelBookingSystem.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/InventoryService.main.iml" filepath="$PROJECT_DIR$/.idea/modules/InventoryService.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/UserService.main.iml" filepath="$PROJECT_DIR$/.idea/modules/UserService.main.iml" />

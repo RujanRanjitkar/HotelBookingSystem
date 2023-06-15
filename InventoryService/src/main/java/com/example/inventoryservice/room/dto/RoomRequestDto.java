@@ -1,16 +1,18 @@
 package com.example.inventoryservice.room.dto;
 
-import com.example.inventoryservice.hotel.dto.ImageResponseDto;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 @Getter
 @Setter
 public class RoomRequestDto {
+    @NotBlank(message = "Please specify room number")
     private String roomNumber;
+    @NotBlank(message = "Please specify room type")
     private String roomType;
-    private double price;
+    @NotNull(message = "Please specify price")
+    private Double price;
     private HotelRoomRequestDto hotel;
 }

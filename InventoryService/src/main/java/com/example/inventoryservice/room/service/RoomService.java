@@ -14,5 +14,5 @@ public interface RoomService {
 
     void updateRoomStatus(Long roomId);
 
-    void updateRoomInfo(Long roomId, RoomRequestDto roomRequestDto, String path, List<MultipartFile> roomImages) throws IOException;
+    void updateRoomInfo(Long roomId, RoomRequestDto roomRequestDto, String path, List<MultipartFile> roomImages, String authorizationHeader) throws IOException;
 }

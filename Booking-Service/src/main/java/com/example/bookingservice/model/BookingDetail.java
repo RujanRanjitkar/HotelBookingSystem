@@ -26,6 +26,5 @@ public class BookingDetail {
     private BookingStatus bookingStatus;
 
     private Long roomId;
-    private String hotelName;
     private String bookedBy;
 }

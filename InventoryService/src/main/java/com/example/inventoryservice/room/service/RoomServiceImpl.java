@@ -1,12 +1,10 @@
 package com.example.inventoryservice.room.service;
 
 import com.example.inventoryservice.customExceptions.ResourceNotFoundException;
-import com.example.inventoryservice.hotel.dto.AddressResponseDto;
 import com.example.inventoryservice.hotel.dto.ImageResponseDto;
 import com.example.inventoryservice.hotel.model.Address;
 import com.example.inventoryservice.hotel.model.Hotel;
 import com.example.inventoryservice.hotel.repo.HotelRepo;
-import com.example.inventoryservice.room.dto.HotelRoomRequestDto;
 import com.example.inventoryservice.room.dto.RoomRequestDto;
 import com.example.inventoryservice.room.dto.RoomResponseDto;
 import com.example.inventoryservice.room.enums.RoomStatus;
@@ -19,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -98,7 +97,7 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public RoomResponseDto getRoomByRoomId(Long roomId) {
 
-        Room room = roomRepo.findById(roomId).get();
+        Room room = roomRepo.findById(roomId).orElseThrow(()-> new ResourceNotFoundException("Room with id " + roomId + " does not exists"));
 
         RoomResponseDto roomResponseDto = new RoomResponseDto();
         roomResponseDto.setRoomNumber(room.getRoomNumber());
@@ -124,23 +123,6 @@ public class RoomServiceImpl implements RoomService {
         roomResponseDto.setRoomImages(imageResponseDtoLists);
 
         roomResponseDto.setPrice(room.getPrice());
-        Hotel hotel = room.getHotel();
-
-        HotelRoomRequestDto hotelRoomRequestDto = new HotelRoomRequestDto();
-
-        hotelRoomRequestDto.setHotelName(hotel.getHotelName());
-
-        AddressResponseDto addressResponse = new AddressResponseDto();
-        addressResponse.setProvince(hotel.getAddress().getProvince());
-        addressResponse.setCity(hotel.getAddress().getCity());
-        addressResponse.setArea(hotel.getAddress().getArea());
-
-        hotelRoomRequestDto.setAddress(addressResponse);
-
-        roomResponseDto.setHotel(hotelRoomRequestDto);
-
-
-
 
         return roomResponseDto;
     }
@@ -148,7 +130,7 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public void updateRoomStatus(Long roomId) {
 
-        Room room = roomRepo.findById(roomId).get();
+        Room room = roomRepo.findById(roomId).orElseThrow(()-> new ResourceNotFoundException("Room with id " + roomId + " does not exists"));
 
         room.setRoomStatus(RoomStatus.BOOKED);
 
@@ -156,27 +138,30 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public void updateRoomInfo(Long roomId, RoomRequestDto roomRequestDto, String path, List<MultipartFile> roomImages) throws IOException {
+    public void updateRoomInfo(Long roomId, RoomRequestDto roomRequestDto, String path, List<MultipartFile> roomImages, String authorizationHeader) throws IOException {
 
         Room existingRoom = roomRepo.findById(roomId).orElseThrow(() -> new ResourceNotFoundException("Room doest not exists"));
 
-        if(existingRoom!=null){
-            Hotel hotel= existingRoom.getHotel();
+        if (existingRoom.getHotel().getHotelOwnerEmail().equals(authorizationHeader)) {
+
+            Hotel hotel = existingRoom.getHotel();
             existingRoom.setHotel(hotel);
+
+            String relativePath = path + "images\\" + existingRoom.getHotel().getHotelName().replaceAll("\\s", "") + "\\" + roomRequestDto.getRoomNumber();
+
+            List<RoomImage> roomImageList = saveRoomImage(roomImages, relativePath);
+
+            List<RoomImage> existingRoomImageList = existingRoom.getRoomImages();
+            existingRoomImageList.addAll(roomImageList);
+
+            existingRoom.setRoomNumber(roomRequestDto.getRoomNumber());
+            existingRoom.setRoomType(roomRequestDto.getRoomType());
+            existingRoom.setPrice(roomRequestDto.getPrice());
+
+            roomRepo.save(existingRoom);
         }
-
-        String relativePath = path + "images\\" + existingRoom.getHotel().getHotelName().replaceAll("\\s", "") + "\\" + roomRequestDto.getRoomNumber();
-
-        List<RoomImage> roomImageList = saveRoomImage(roomImages, relativePath);
-
-        List<RoomImage> existingRoomImageList = existingRoom.getRoomImages();
-        existingRoomImageList.addAll(roomImageList);
-
-        existingRoom.setRoomNumber(roomRequestDto.getRoomNumber());
-        existingRoom.setRoomType(roomRequestDto.getRoomType());
-        existingRoom.setPrice(roomRequestDto.getPrice());
-
-        roomRepo.save(existingRoom);
+        else {
+            throw new AccessDeniedException("You do not have the access to update room");
+        }
     }
-
 }

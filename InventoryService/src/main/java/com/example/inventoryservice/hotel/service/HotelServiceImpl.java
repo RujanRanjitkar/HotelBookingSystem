@@ -8,7 +8,6 @@ import com.example.inventoryservice.hotel.model.Contact;
 import com.example.inventoryservice.hotel.model.Hotel;
 import com.example.inventoryservice.hotel.model.HotelImage;
 import com.example.inventoryservice.hotel.repo.HotelRepo;
-import com.example.inventoryservice.room.dto.HotelRoomRequestDto;
 import com.example.inventoryservice.room.dto.RoomResponseDto;
 import com.example.inventoryservice.room.model.Room;
 import com.example.inventoryservice.room.model.RoomImage;
@@ -23,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -42,6 +42,7 @@ public class HotelServiceImpl implements HotelService {
         hotelResponseDto.setHotelName(hotel.getHotelName());
 
         Address address = hotel.getAddress();
+
         AddressResponseDto addressResponseDto = new AddressResponseDto();
         addressResponseDto.setProvince(address.getProvince());
         addressResponseDto.setCity(address.getCity());
@@ -56,14 +57,15 @@ public class HotelServiceImpl implements HotelService {
 
         for (HotelImage hotelImage : hotelImages) {
 
-            ImageResponseDto image = new ImageResponseDto();
+            ImageResponseDto myHotelImage = new ImageResponseDto();
 
             String imagePath = hotelImage.getImageUrl().replace("InventoryService\\src\\main\\resources\\static\\", "");
             String finalImagePath = "http://localhost:8081/" + imagePath.replace("\\", "/");
 
-            image.setImageUrl(finalImagePath);
+            myHotelImage.setImageId(hotelImage.getImageId());
+            myHotelImage.setImageUrl(finalImagePath);
 
-            imageResponseDtoList.add(image);
+            imageResponseDtoList.add(myHotelImage);
         }
 
         hotelResponseDto.setHotelImages(imageResponseDtoList);
@@ -100,32 +102,21 @@ public class HotelServiceImpl implements HotelService {
             roomResponseDto.setRoomStatus(room.getRoomStatus());
             roomResponseDto.setPrice(room.getPrice());
 
-            HotelRoomRequestDto hotelRoomRequestDto = new HotelRoomRequestDto();
-            hotelRoomRequestDto.setHotelName(hotel.getHotelName());
-
-            AddressResponseDto addressResponse = new AddressResponseDto();
-            addressResponse.setProvince(hotel.getAddress().getProvince());
-            addressResponse.setCity(hotel.getAddress().getCity());
-            addressResponse.setArea(hotel.getAddress().getArea());
-
-            hotelRoomRequestDto.setAddress(addressResponse);
-
-            roomResponseDto.setHotel(hotelRoomRequestDto);
-
             List<RoomImage> roomImages = room.getRoomImages();
 
             List<ImageResponseDto> imageResponseDtoLists = new ArrayList<>();
 
             for (RoomImage roomImage : roomImages) {
 
-                ImageResponseDto image = new ImageResponseDto();
+                ImageResponseDto myRoomImage = new ImageResponseDto();
 
                 String imagePath = roomImage.getImageUrl().replace("InventoryService\\src\\main\\resources\\static\\", "");
                 String finalImagePath = "http://localhost:8081/" + imagePath.replace("\\", "/");
 
-                image.setImageUrl(finalImagePath);
+                myRoomImage.setImageId(roomImage.getImageId());
+                myRoomImage.setImageUrl(finalImagePath);
 
-                imageResponseDtoLists.add(image);
+                imageResponseDtoLists.add(myRoomImage);
             }
 
             roomResponseDto.setRoomImages(imageResponseDtoLists);
@@ -208,11 +199,9 @@ public class HotelServiceImpl implements HotelService {
     @Override
     public HotelResponseDto getHotelByHotelId(Long hotelId) {
 
-        Hotel hotel = hotelRepo.findById(hotelId).get();
+        Hotel hotel = hotelRepo.findById(hotelId).orElseThrow(()-> new ResourceNotFoundException("Hotel with id " +  hotelId + " does not exists"));
 
-        HotelResponseDto hotelResponseDto = convertToHotelResponseDto(hotel);
-
-        return hotelResponseDto;
+        return convertToHotelResponseDto(hotel);
     }
 
     @Override
@@ -268,7 +257,7 @@ public class HotelServiceImpl implements HotelService {
 
             if (!StringUtils.isEmpty(hotelName)) {
                 String lowercaseHotelName = hotelName.toLowerCase();
-                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(criteriaBuilder.lower(root.get("hotelName")), lowercaseHotelName));
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(root.get("hotelName")), "%" + lowercaseHotelName + "%"));
             }
 
             if (!StringUtils.isEmpty(price)) {
@@ -291,47 +280,51 @@ public class HotelServiceImpl implements HotelService {
     }
 
     @Override
-    public void updateHotelInfo(Long hotelId, HotelRequestDto hotelRequestDto, String path, List<MultipartFile> hotelImages) throws IOException {
+    public void updateHotelInfo(Long hotelId, HotelRequestDto hotelRequestDto, String path, List<MultipartFile> hotelImages, String authorizationHeader) throws IOException {
 
         Hotel existingHotel = hotelRepo.findById(hotelId).orElseThrow(() -> new ResourceNotFoundException("Hotel does not exists"));
 
-        String relativePath = path + "images\\" + existingHotel.getHotelName().replaceAll("\\s", "");
+        if (existingHotel.getHotelOwnerEmail().equals(authorizationHeader)) {
+            String relativePath = path + "images\\" + existingHotel.getHotelName().replaceAll("\\s", "");
 
-        List<HotelImage> hotelImageList = saveHotelImage(hotelImages, relativePath);
+            List<HotelImage> hotelImageList = saveHotelImage(hotelImages, relativePath);
 
-        List<HotelImage> existingHotelImageList = existingHotel.getHotelImages();
-        existingHotelImageList.addAll(hotelImageList);
+            List<HotelImage> existingHotelImageList = existingHotel.getHotelImages();
+            existingHotelImageList.addAll(hotelImageList);
 
-        existingHotel.setHotelName(hotelRequestDto.getHotelName());
+            existingHotel.setHotelName(hotelRequestDto.getHotelName());
 
-        Address existingAddress = existingHotel.getAddress();
-        existingAddress.setProvince(hotelRequestDto.getAddress().getProvince());
-        existingAddress.setCity(hotelRequestDto.getAddress().getCity());
-        existingAddress.setArea(hotelRequestDto.getAddress().getArea());
+            Address existingAddress = existingHotel.getAddress();
+            existingAddress.setProvince(hotelRequestDto.getAddress().getProvince());
+            existingAddress.setCity(hotelRequestDto.getAddress().getCity());
+            existingAddress.setArea(hotelRequestDto.getAddress().getArea());
 
-        existingHotel.setAddress(existingAddress);
+            existingHotel.setAddress(existingAddress);
 
-        existingHotel.setDescription(hotelRequestDto.getDescription());
-        existingHotel.setCreatedBy(hotelRequestDto.getCreatedBy());
+            existingHotel.setDescription(hotelRequestDto.getDescription());
+            existingHotel.setCreatedBy(hotelRequestDto.getCreatedBy());
 
 
-        List<Contact> existingContacts = existingHotel.getContacts();
+            List<Contact> existingContacts = existingHotel.getContacts();
 
-        List<Contact> hotelContacts = hotelRequestDto.getContacts();
+            List<Contact> hotelContacts = hotelRequestDto.getContacts();
 
-        for (int i = 0; i < existingContacts.size(); i++) {
-            for (int j = 0; j <hotelContacts.size() ; j++) {
-                if(i==j){
-                    existingContacts.get(i).setContactNumber(hotelContacts.get(i).getContactNumber());
-                    existingContacts.get(i).setEmail(hotelContacts.get(i).getEmail());
+            for (int i = 0; i < existingContacts.size(); i++) {
+                for (int j = 0; j < hotelContacts.size(); j++) {
+                    if (i == j) {
+                        existingContacts.get(i).setContactNumber(hotelContacts.get(i).getContactNumber());
+                        existingContacts.get(i).setEmail(hotelContacts.get(i).getEmail());
+                    }
                 }
             }
+
+            existingHotel.setContacts(existingContacts);
+
+            existingHotel.setHotelOwnerEmail(hotelRequestDto.getHotelOwnerEmail());
+
+            hotelRepo.save(existingHotel);
+        } else {
+            throw new AccessDeniedException("You do not have the access to update hotel");
         }
-
-        existingHotel.setContacts(existingContacts);
-
-        existingHotel.setHotelOwnerEmail(hotelRequestDto.getHotelOwnerEmail());
-
-        hotelRepo.save(existingHotel);
     }
 }

@@ -1,4 +1,4 @@
-package com.example.inventoryservice.hotel.util;
+package com.example.inventoryservice.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

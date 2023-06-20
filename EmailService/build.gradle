@@ -26,6 +26,9 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	runtimeOnly group: 'org.aspectj', name: 'aspectjweaver'
+	runtimeOnly group: 'org.aspectj', name: 'aspectjrt', version: '1.9.19'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: '3.0.7'
 }
 
 dependencyManagement {

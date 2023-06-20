@@ -37,6 +37,7 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	implementation 'org.hibernate.validator:hibernate-validator:7.0.1.Final'
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+	runtimeOnly group: 'org.aspectj', name: 'aspectjweaver', version: '1.9.19'
 }
 
 dependencyManagement {

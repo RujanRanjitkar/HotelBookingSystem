@@ -31,7 +31,7 @@ public class BookingServiceImpl implements BookingDetailService {
     public void sendMail(String userEmail){
         EmailSender emailSender=new EmailSender();
         emailSender.setToEmail(userEmail);
-        emailSender.setBody("You booking has been successful");
+        emailSender.setBody("Your booking has been successful");
         emailSender.setSubject("Welcome to Hotel Booking System");
         emailService.sendEmail(emailSender);
     }
